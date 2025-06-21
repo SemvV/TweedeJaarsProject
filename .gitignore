@@ -1,0 +1,36 @@
+models/Roberta_base_5E/hf_transformer_model/merges.txt
+models/Roberta_base_5E/hf_transformer_model/model.safetensors
+models/Roberta_base_5E/hf_transformer_model/special_tokens_map.json
+models/Roberta_base_5E/hf_transformer_model/tokenizer.json
+models/Roberta_base_5E/hf_transformer_model/tokenizer_config.json
+models/Roberta_base_5E/hf_transformer_model/vocab.json
+models/Roberta_base_5E/Roberta_base_5E_report.pdf
+models/Roberta_base_5E/training_validation_test_loss.png
+models/T5_small_5E/hf_transformer_model/config.json
+models/T5_small_5E/hf_transformer_model/model.safetensors
+models/T5_small_5E/hf_transformer_model/special_tokens_map.json
+models/T5_small_5E/hf_transformer_model/tokenizer.json
+models/T5_small_5E/hf_transformer_model/tokenizer_config.json
+models/T5_small_5E/T5_small_5E_report.pdf
+models/T5_small_5E/training_validation_test_loss.png
+test.csv
+models/Roberta_base_5E/hf_transformer_model/config.json
+models/Bert_base_unscased_5E/training_validation_test_loss.png
+models/Bert_base_unscased_5E/hf_transformer_model/vocab.txt
+models/Bert_base_unscased_5E/hf_transformer_model/tokenizer_config.json
+models/Bert_base_unscased_5E/hf_transformer_model/tokenizer.json
+models/Bert_base_unscased_5E/hf_transformer_model/special_tokens_map.json
+models/Bert_base_unscased_5E/hf_transformer_model/model.safetensors
+models/Bert_base_unscased_5E/hf_transformer_model/config.json
+models/Bert_base_unscased_5E/Bert_base_unscased_5E_report.pdf
+models/.DS_Store
+Full catolog.png
+Categoryt count.png
+ag_news_model_saved/vocab.txt
+ag_news_model_saved/tokenizer_config.json
+ag_news_model_saved/tokenizer.json
+ag_news_model_saved/special_tokens_map.json
+ag_news_model_saved/model.safetensors
+ag_news_model_saved/config.json
+.DS_Store
+train.csv
