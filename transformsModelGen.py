@@ -2,7 +2,7 @@ import pandas as pd
 import os
 import time
 import json
-import random # Import random for selecting sample sentences
+import random
 
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -23,8 +23,27 @@ from sklearn.metrics import precision_recall_fscore_support, accuracy_score
 
 import requests
 
-# Global mapping for class names (used for consistent display)
-# Defined globally so it can be accessed by functions like get_sample_predictions
+"""
+This script is designed to train a Hugging Face Transformer model for text classification tasks.
+It includes data loading, preprocessing, model training, evaluation, and generating a PDF report with performance metrics and visualizations.
+It also integrates with Ollama to get a model review based on the training results.
+
+To understand the code:
+1. It starts by defining global mappings for class indices to names and vice versa.
+2. It defines a custom dataset class for handling the data.
+3. It includes functions for loading data, tokenizing text, creating data loaders, training the model, evaluating it, and saving the model.
+4. It generates a loss plot and sample predictions.
+5. It integrates with Ollama to get a model review based on the training results.
+6. Finally, it generates a PDF report summarizing the training process, metrics, and Ollama review.
+
+The script is structured to be modular, allowing for easy adjustments to hyperparameters, model types, and data sources.
+It also includes error handling for robustness, especially when loading models and tokenizers.
+The script is intended to be run as a standalone program, and it expects a CSV file with text data and class labels for training.
+The CSV file should have columns named 'class' and 'clean_notes', where 'class' contains the class labels and 'clean_notes' contains the text data.
+The script will create a directory for saving the model and report, and it will generate a PDF report summarizing the training results, including a loss plot and sample predictions.
+The Ollama integration provides an additional layer of analysis, generating a qualitative review of the model based on its performance metrics.
+"""
+
 GLOBAL_INDEX_TO_CLASS = {
     1: 'environment',
     2: 'Culture',
@@ -66,7 +85,7 @@ def load_data(file_path, train_split=0.8, val_split=0.1, random_state=42):
         print("Test")
         unique_classes = sorted(df['class'].unique())
         class_names = sorted(df['class'].map(lambda x: df[df['class'] == x]['class'].iloc[0]).unique())
-        # If the CSV has a 'class' column with string names, use those; otherwise, keep the mapping as is
+        
         print("Test2")
         if 'class' in df.columns and df['class'].dtype == object:
             class_names = sorted(df['class'].unique())
@@ -80,13 +99,12 @@ def load_data(file_path, train_split=0.8, val_split=0.1, random_state=42):
         for index, class_name in GLOBAL_INDEX_TO_CLASS.items():
            print(f"Class {index}: {class_name}")
 
-        # Calculate sizes for train, validation, and test sets
+        
         total_size = len(df)
         train_size = int(train_split * total_size)
         val_size = int(val_split * total_size)
-        test_size = total_size - train_size - val_size # The remainder
+        test_size = total_size - train_size - val_size
 
-        # Split the dataset
         train_df = df.sample(n=train_size, random_state=random_state)
         remaining_df = df.drop(train_df.index)
         val_df = remaining_df.sample(n=val_size, random_state=random_state)
@@ -94,13 +112,9 @@ def load_data(file_path, train_split=0.8, val_split=0.1, random_state=42):
 
         print(f"Dataset loaded: Train={len(train_df)}, Val={len(val_df)}, Test={len(test_df)}")
 
-        # Get class counts for each split
         train_class_counts = train_df['class'].map(GLOBAL_INDEX_TO_CLASS).value_counts().to_dict()
         val_class_counts = val_df['class'].map(GLOBAL_INDEX_TO_CLASS).value_counts().to_dict()
         test_class_counts = test_df['class'].map(GLOBAL_INDEX_TO_CLASS).value_counts().to_dict()
-        
-        # Dynamically update the global class mappings based on the dataset
-        
 
         return train_df, val_df, test_df, \
                train_class_counts, val_class_counts, test_class_counts
@@ -108,7 +122,6 @@ def load_data(file_path, train_split=0.8, val_split=0.1, random_state=42):
         raise FileNotFoundError(f"The file {file_path} does not exist.")
 
 def create_tokenizer(model_name):
-    # Ensure the model name is valid for AutoTokenizer
     try:
         tokenizer = AutoTokenizer.from_pretrained(model_name)
         return tokenizer
@@ -127,8 +140,6 @@ def tokenize_dataset(train_df, val_df, test_df, tokenizer, max_len):
     train_encodings = tokenize_function(train_df['clean_notes'].tolist(), tokenizer, max_len)
     val_encodings = tokenize_function(val_df['clean_notes'].tolist(), tokenizer, max_len)
     test_encodings = tokenize_function(test_df['clean_notes'].tolist(), tokenizer, max_len)
-
-    # Labels are 1-indexed in CSV, but Hugging Face models expect 0-indexed labels
     y_train_hf = torch.tensor((train_df['class'] - 1).values, dtype=torch.long)
     y_val_hf = torch.tensor((val_df['class'] - 1).values, dtype=torch.long)
     y_test_hf = torch.tensor((test_df['class'] - 1).values, dtype=torch.long)
@@ -148,7 +159,6 @@ def create_data_loaders(train_encodings, y_train_hf, val_encodings, y_val_hf, te
 # --- Model Training and Evaluation ---
 def train_model(tokenizer_name, num_labels, train_loader, val_loader, learning_rate, epochs):
     model_name = tokenizer_name
-    # Ensure the model name is valid for AutoModelForSequenceClassification
     try:
         model_hf = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=num_labels)
     except Exception as e:
@@ -192,8 +202,7 @@ def train_model(tokenizer_name, num_labels, train_loader, val_loader, learning_r
         train_losses.append(avg_train_loss)
         print(f"Epoch {epoch+1}: Average Training Loss: {avg_train_loss:.4f}")
 
-        # Evaluate on validation set after each epoch
-        avg_val_loss, _, _, _, _ = evaluate_model(model_hf, val_loader, device, return_metrics=True) # Corrected unpacking
+        avg_val_loss, _, _, _, _ = evaluate_model(model_hf, val_loader, device, return_metrics=True)
         val_losses.append(avg_val_loss)
         print(f"Epoch {epoch+1}: Average Validation Loss: {avg_val_loss:.4f}")
 
@@ -227,16 +236,13 @@ def evaluate_model(model, data_loader, device, return_metrics=False):
 
     avg_loss = total_loss / len(data_loader)
     accuracy = accuracy_score(true_labels, predictions)
-    # Ensure num_labels is correctly passed or inferred for precision_recall_fscore_support
-    # It's better to use target_names for labels when possible or set 'labels' parameter
-    # For now, using simple range based on max label, assuming all classes appear
     labels_in_data = list(set(true_labels) | set(predictions))
-    if not labels_in_data: # Handle case where no samples exist
+    if not labels_in_data:
         precision, recall, f1 = 0.0, 0.0, 0.0
     else:
         precision, recall, f1, _ = precision_recall_fscore_support(
             true_labels, predictions, average='weighted', zero_division=0,
-            labels=sorted(list(set(true_labels) | set(predictions))) # Ensure all possible labels are considered
+            labels=sorted(list(set(true_labels) | set(predictions)))
         )
 
     if return_metrics:
@@ -262,7 +268,6 @@ def plot_loss(train_losses, val_losses, test_loss, epochs, plot_path="loss_plot.
     plt.plot(range(1, epochs + 1), train_losses, label='Training Loss', marker='o', linestyle='-')
     plt.plot(range(1, epochs + 1), val_losses, label='Validation Loss', marker='o', linestyle='--')
     
-    # Plot test loss as a horizontal line if it's a single value
     if isinstance(test_loss, (int, float)):
         plt.axhline(y=test_loss, color='r', linestyle=':', label=f'Final Test Loss ({test_loss:.4f})')
     elif isinstance(test_loss, list) and len(test_loss) == epochs: # If test loss was tracked per epoch
@@ -286,14 +291,13 @@ def get_sample_predictions(test_df, model, tokenizer, device, num_samples=5):
         print("Test DataFrame is empty, cannot get sample predictions.")
         return samples
 
-    # Randomly select N samples
     sample_indices = random.sample(range(len(test_df)), min(num_samples, len(test_df)))
     sampled_df = test_df.iloc[sample_indices]
 
     texts = sampled_df['clean_notes'].tolist()
-    true_labels_indices = (sampled_df['class'] - 1).tolist() # Convert to 0-indexed
+    true_labels_indices = (sampled_df['class'] - 1).tolist()
 
-    encodings = tokenize_function(texts, tokenizer, max_len=tokenizer.model_max_length) # Use max_len from tokenizer
+    encodings = tokenize_function(texts, tokenizer, max_len=tokenizer.model_max_length)
     
     model.eval()
     with torch.no_grad():
@@ -306,7 +310,7 @@ def get_sample_predictions(test_df, model, tokenizer, device, num_samples=5):
         predicted_indices = predicted_indices.cpu().numpy()
 
     for i in range(len(texts)):
-        true_label_name = GLOBAL_INDEX_TO_CLASS.get(true_labels_indices[i] + 1, "Unknown") # Convert back to 1-indexed for lookup
+        true_label_name = GLOBAL_INDEX_TO_CLASS.get(true_labels_indices[i] + 1, "Unknown")
         predicted_label_name = GLOBAL_INDEX_TO_CLASS.get(predicted_indices[i] + 1, "Unknown")
         samples.append({
             'text': texts[i],
@@ -320,7 +324,7 @@ def get_sample_predictions(test_df, model, tokenizer, device, num_samples=5):
 def get_ollama_review(model_name, epochs, training_time, device,
                       train_losses, val_losses, test_loss,
                       val_metrics, test_metrics, hyperparameters,
-                      num_classes, class_names): # Added num_classes and class_names
+                      num_classes, class_names):
     
     ollama_url = "http://localhost:11434/api/generate"
     model_review = "Could not get review from Ollama."
@@ -377,7 +381,7 @@ def get_ollama_review(model_name, epochs, training_time, device,
     """
 
     data = {
-        "model": "gemma3:27b", # Using the correct model name
+        "model": "gemma3:27b",
         "prompt": prompt,
         "stream": False,
         "format": "json"
@@ -386,11 +390,10 @@ def get_ollama_review(model_name, epochs, training_time, device,
     headers = {'Content-Type': 'application/json'}
 
     try:
-        response = requests.post(ollama_url, headers=headers, data=json.dumps(data), timeout=420) # Increased timeout further
-        response.raise_for_status() # Raise an exception for HTTP errors
+        response = requests.post(ollama_url, headers=headers, data=json.dumps(data), timeout=420)
+        response.raise_for_status()
         result = response.json()
         
-        # Ollama often returns the JSON embedded in a 'response' key, or sometimes directly
         generated_content = result.get('response', '{}')
         try:
             parsed_response = json.loads(generated_content)
@@ -414,14 +417,11 @@ def generate_report_pdf(pdf_path, plot_path, model_info, hyperparameters,
                         train_class_counts, val_class_counts, test_class_counts,
                         val_metrics, test_metrics,
                         ollama_quality, ollama_description,
-                        sample_predictions): # Added sample_predictions
+                        sample_predictions):
 
     doc = SimpleDocTemplate(pdf_path, pagesize=letter)
     styles = getSampleStyleSheet()
-    print(val_metrics)
-    print(test_metrics)
 
-    # Custom styles
     h1_style = ParagraphStyle(
         name='h1',
         parent=styles['h1'],
@@ -473,22 +473,6 @@ def generate_report_pdf(pdf_path, plot_path, model_info, hyperparameters,
     elements.append(Paragraph(f"<font name='Helvetica-Bold'>Device Used:</font> {model_info['device']}", normal_text))
     elements.append(Spacer(1, 12))
 
-    #elements.append(Paragraph("Performance Metrics", h2_style))
-    #elements.append(Paragraph(f"<font name='Helvetica-Bold'>Average Loss:</font> {val_metrics['avg_loss']:.4f}", normal_text))
-    #elements.append(Paragraph(f"<font name='Helvetica-Bold'>Accuracy:</font> {val_metrics['accuracy']:.4f}", normal_text))
-    #elements.append(Paragraph(f"<font name='Helvetica-Bold'>Precision (weighted):</font> {val_metrics['precision']:.4f}", normal_text))
-    #elements.append(Paragraph(f"<font name='Helvetica-Bold'>Recall (weighted):</font> {val_metrics['recall']:.4f}", normal_text))
-    #elements.append(Paragraph(f"<font name='Helvetica-Bold'>F1-Score (weighted):</font> {val_metrics['f1']:.4f}", normal_text))
-    #elements.append(Spacer(1, 12))
-
-    #elements.append(Paragraph("Test Set Metrics", h2_style))
-    #elements.append(Paragraph(f"<font name='Helvetica-Bold'>Average Loss:</font> {test_metrics['avg_loss']:.4f}", normal_text))
-    #elements.append(Paragraph(f"<font name='Helvetica-Bold'>Accuracy:</font> {test_metrics['accuracy']:.4f}", normal_text))
-    #elements.append(Paragraph(f"<font name='Helvetica-Bold'>Precision (weighted):</font> {test_metrics['precision']:.4f}", normal_text))
-    #elements.append(Paragraph(f"<font name='Helvetica-Bold'>Recall (weighted):</font> {test_metrics['recall']:.4f}", normal_text))
-    #elements.append(Paragraph(f"<font name='Helvetica-Bold'>F1-Score (weighted):</font> {test_metrics['f1']:.4f}", normal_text))
-    #elements.append(Spacer(1, 12))
-
     # --- Section: Hyperparameters ---
     elements.append(Paragraph("Hyperparameters", h2_style))
     elements.append(Paragraph(f"<font name='Helvetica-Bold'>Max Sequence Length:</font> {hyperparameters['max_len']}", normal_text))
@@ -520,14 +504,11 @@ def generate_report_pdf(pdf_path, plot_path, model_info, hyperparameters,
     elements.append(Paragraph("<font name='Helvetica-Bold'>Graph:</font>", normal_text))
     # --- Section: Loss Plot ---
     if os.path.exists(plot_path):
-        
-        # Add a spacer here to push the image down from the top edge
-        elements.append(Spacer(1, 280)) # Adjust this value (e.g., 20 points) as needed for desired top margin
+        elements.append(Spacer(1, 280))
 
         img = ImageReader(plot_path)
         img_width, img_height = img.getSize()
         
-        # Calculate scaling to fit within the page (e.g., max width 500, max height 300)
         max_plot_width = 500
         max_plot_height = 300
         aspect_ratio = img_height / img_width
@@ -542,20 +523,14 @@ def generate_report_pdf(pdf_path, plot_path, model_info, hyperparameters,
         if plot_draw_height > max_plot_height:
             plot_draw_height = max_plot_height
             plot_draw_width = plot_draw_height / aspect_ratio
-            
-        # The Spacer below the plot title is good, but the key is one *before* the image.
-        # elements.append(Spacer(1, 10)) # This was originally here, but is after the title
-        
-        # Add image, centered
+
         elements.append(
             Paragraph(f"<img src='{plot_path}' width='{plot_draw_width}' height='{plot_draw_height}'/>",
             ParagraphStyle(name='img_style', alignment=TA_CENTER))
         )
-        elements.append(Spacer(1, 12)) # Spacer after the image, good for separating content
+        elements.append(Spacer(1, 12))
     else:
         elements.append(Paragraph("Loss plot image not found.", normal_text))
-    #elements.append(PageBreak())
-
     # --- Section: Performance Metrics ---
     
     elements.append(Paragraph("<font name='Helvetica-Bold'>Validation Set Metrics:</font>", normal_text))
@@ -605,7 +580,6 @@ def main():
     batch_size = 16
     learning_rate = 5e-5
     
-    # Dataset split percentages
     train_split_perc = 0.7
     val_split_perc = 0.2
     test_split_perc = 0.1
@@ -614,7 +588,6 @@ def main():
     report_pdf_name = 'model_training_report_enhanced.pdf'
     loss_plot_name = 'training_validation_test_loss.png'
 
-    # Ensure output directory exists
     os.makedirs(output_dir, exist_ok=True)
 
     # --- User Input ---
@@ -656,7 +629,7 @@ def main():
     train_loader_hf, val_loader_hf, test_loader_hf = \
         create_data_loaders(train_encodings, y_train_hf, val_encodings, y_val_hf, test_encodings, y_test_hf, batch_size)
 
-    num_labels = len(GLOBAL_INDEX_TO_CLASS) # Use the global mapping for total number of classes
+    num_labels = len(GLOBAL_INDEX_TO_CLASS)
     
     # 4. Train Model with Validation Tracking
     model_hf, train_losses, val_losses, device_name, training_time = train_model(
@@ -736,7 +709,7 @@ def main():
         train_class_counts, val_class_counts, test_class_counts,
         val_metrics, test_metrics,
         ollama_quality, ollama_description,
-        sample_predictions # Pass sample predictions
+        sample_predictions
     )
 
 if __name__ == '__main__':
