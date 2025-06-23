@@ -34,7 +34,6 @@ Note: The `data/` folder is excluded from GitHub due to large file sizes.
 - **violence_probability.ipynb**  
   Trains a logistic regression model to predict violence probability by actor and country. Usage:
   ```python
-  from violence_probability import predict_violence
   print(predict_violence('country_code', 'actor_name'))
   ```
 
