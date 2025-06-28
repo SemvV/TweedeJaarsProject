@@ -28,9 +28,9 @@ Note: The `data/` folder is excluded from GitHub due to large file sizes.
 
 ### Violence Prediction Models
 - **violence_model_binary.ipynb**  
-  Implements and evaluates scikit-learn models for binary violence prediction (violent vs. non-violent protests).
+  Implements and evaluates scikit-learn models for binary violence prediction (violent vs. non-violent protests). Also includes the generation of the data needed.
 - **violence_orientation_binary.ipynb**  
-  Explores feature engineering, orientation analysis, and data preparation for the binary violence model.
+  Explores feature engineering and orientation analysis for the binary violence prediction model (and violence prediction in general)
 - **violence_probability.ipynb**  
   Trains a logistic regression model to predict violence probability by actor and country. Usage:
   ```python
