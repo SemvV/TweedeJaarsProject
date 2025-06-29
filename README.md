@@ -42,7 +42,7 @@ Note: The `data/` folder is excluded from GitHub due to large file sizes.
 ### Runtime requirements
 Below are the hardware/runtime requirements for training specific models. Anything besides the below mentioned topics, should be a able to run on a low-end cpu or gpu.
 - **Supervised note labeling**  
-  For the supervised note labeling models, we recommend using a gpu. Running on a XXX this takes around XXX.
+  For the supervised note labeling models, we recommend using a gpu. Running on a CUDA this takes around 1.5h and with an Apple M4 it takes around 2.5h.
 
 - **Semi-supervised note labeling**  
   A GPU is recommended. ESS takes up to 30 minutes running on a geforce rtx 3070, while ZSC takes around two hours to classify 77,496 notes.
