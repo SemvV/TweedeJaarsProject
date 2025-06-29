@@ -575,7 +575,7 @@ def generate_report_pdf(pdf_path, plot_path, model_info, hyperparameters,
 
 # --- Main Execution ---
 def main():
-    file_path = '../data/filtered_events_class.csv'
+    file_path = '../data/labeled_balanced.csv'
     max_len = 128
     batch_size = 16
     learning_rate = 5e-5
