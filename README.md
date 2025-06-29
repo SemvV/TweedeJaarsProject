@@ -97,9 +97,9 @@ Below are the hardware/runtime requirements for training specific models. Anythi
 
 - **dataset_balancing.ipynb**  
   Addresses class imbalance by grouping smaller topic classes into broader categories.
-- **supervised_labeling_bert.ipynb**  
-  Introduction and tutorial for fine-tuning BERT on protest topic classification.
 - **transformers_model_finetuner.py**  
   Script to train and evaluate a Hugging Face Transformer for text classification, with automated report generation (PDF) and Ollama-based model review.
+- **labeling_by_transformer_model.ipynb**  
+  An script to label the dataset with an pretrained transformer model
 
 ---
