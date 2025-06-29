@@ -16,6 +16,43 @@ Note: The `data/` folder is excluded from GitHub due to large file sizes.
 
 ---
 
+## Requirements
+### Required python packages
+- **General packages**  
+  - Pandas
+  - numpy
+  - matplotlib
+  - nltk
+  - sklearn/ scikit-learn
+
+- **Supervised labeling models**  
+  - torch
+  - transformers
+  - tqdm
+  - reportlab
+  - requests
+
+- **Non-supervised labeling models**  
+  - sentence_transformers
+  - bertopic
+
+- **Violence prediction models**  
+  - xgboost
+
+### Runtime requirements
+Below are the hardware/runtime requirements for training specific models. Anything besides the below mentioned topics, should be a able to run on a low-end cpu or gpu.
+- **Supervised note labeling**  
+  For the supervised note labeling models, we recommend using a gpu. Running on a XXX this takes around XXX.
+
+- **Non-supervised note labeling**  
+  XXX
+
+- **Binary violence prediction**  
+  We recommend the binary violence prediction models to be run on google colab or a low-end gpu/ cpu. On google colab, running the four different binary prediction models will take around 10 to 15 minutes.
+
+- **Probability violence prediction**  
+  XXX
+
 ## File Overview
 
 ### Data Preparation
@@ -28,9 +65,10 @@ Note: The `data/` folder is excluded from GitHub due to large file sizes.
 
 ### Violence Prediction Models
 - **violence_model_binary.ipynb**  
-  Implements and evaluates scikit-learn models for binary violence prediction (violent vs. non-violent protests).
+  Implements and evaluates scikit-learn models for binary violence prediction (violent vs. non-violent protests). Also includes the generation of the data needed and the
+  factors most influencing violence according to the logistic regression model.
 - **violence_orientation_binary.ipynb**  
-  Explores feature engineering, orientation analysis, and data preparation for the binary violence model.
+  Explores feature engineering and orientation analysis for the binary violence prediction model (and violence prediction in general)
 - **violence_probability.ipynb**  
   Trains a logistic regression model to predict violence probability by actor and country. Usage:
   ```python
