@@ -16,6 +16,43 @@ Note: The `data/` folder is excluded from GitHub due to large file sizes.
 
 ---
 
+## Requirements
+### Required python packages
+- **General packages**  
+  - Pandas
+  - numpy
+  - matplotlib
+  - nltk
+  - sklearn/ scikit-learn
+
+- **Supervised labeling models**  
+  - torch
+  - transformers
+  - tqdm
+  - reportlab
+  - requests
+
+- **Non-supervised labeling models**  
+  - sentence_transformers
+  - bertopic
+
+- **Violence prediction models**  
+  - xgboost
+
+### Runtime requirements
+Below are the hardware/runtime requirements for training specific models. Anything besides the below mentioned topics, should be a able to run on a low-end cpu or gpu.
+- **Supervised note labeling**  
+  For the supervised note labeling models, we recommend using a gpu. Running on a XXX this takes around XXX.
+
+- **Non-supervised note labeling**  
+  XXX
+
+- **Binary violence prediction**  
+  We recommend the binary violence prediction models to be run on google colab or a low-end gpu/ cpu. On google colab, running the four different binary prediction models will take around 10 to 15 minutes.
+
+- **Probability violence prediction**  
+  XXX
+
 ## File Overview
 
 ### Data Preparation
