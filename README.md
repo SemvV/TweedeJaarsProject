@@ -44,8 +44,11 @@ Below are the hardware/runtime requirements for training specific models. Anythi
 - **Supervised note labeling**  
   For the supervised note labeling models, we recommend using a gpu. Running on a XXX this takes around XXX.
 
-- **Non-supervised note labeling**  
-  XXX
+- **Semi-supervised note labeling**  
+  A GPU is recommended. ESS takes up to 30 minutes running on a geforce rtx 3070, while ZSC takes around two hours to classify 77,496 notes.
+
+- **Unsupervised note labeling**
+Neither is recommended.
 
 - **Binary violence prediction**  
   We recommend the binary violence prediction models to be run on google colab or a low-end gpu/ cpu. On google colab, running the four different binary prediction models will take around 10 to 15 minutes.
